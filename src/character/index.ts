@@ -123,19 +123,55 @@ charactersRouter.get('/:char', async (req, res) => {
             ),
         },
     };
+
+    const getItem = async (path: string) => {
+        let base = '';
+        const len = await page.$eval(
+            '#live_data > div:nth-child(5) > table > tbody > tr:nth-child(13)',
+            (el) => el.children.length
+        );
+        if (len === 8) {
+            base =
+                '#live_data > div:nth-child(5) > table > tbody > tr:nth-child(13) > td:nth-child(8)';
+        } else if (len === 9) {
+            base =
+                '#live_data > div:nth-child(5) > table > tbody > tr:nth-child(13) > td:nth-child(9)';
+        } else {
+            throw new Error('More than 9 elements in base');
+        }
+        const url = await page.$eval(`${base} > ${path}`, (el) => el.href);
+        await page.goto(url);
+        const name: string = await page.$eval(
+            '.post > div > div > div > div.custom_title',
+            (el) => {
+                return el.innerText;
+            }
+        );
+        const img_url: string = await page.$eval(
+            '.post > div > div > div > table.item_main_table > tbody > tr:nth-child(1) > td:nth-child(1) > div > img',
+            (el) => {
+                return el.src;
+            }
+        );
+        await page.goBack();
+        return { name, img_url };
+    };
+
+    const getSkillItem = async () => {};
+
     const materials = {
         gem: {
-            green: {},
-            blue: {},
-            pink: {},
-            gold: {},
+            green: await getItem('div:nth-child(2) > a'),
+            blue: await getItem('div:nth-child(3) > a'),
+            pink: await getItem('div:nth-child(4) > a'),
+            gold: await getItem('div:nth-child(5) > a'),
         },
-        natural: {},
-        boss: {},
+        natural: await getItem('div:nth-child(1) > a'),
+        boss: await getItem('div:nth-child(9) > a'),
         mob: {
-            gray: {},
-            green: {},
-            blue: {},
+            gray: await getItem('div:nth-child(6) > a'),
+            green: await getItem('div:nth-child(7) > a'),
+            blue: await getItem('div:nth-child(8) > a'),
         },
         weekly: {},
         book: {
