@@ -157,7 +157,24 @@ charactersRouter.get('/:char', async (req, res) => {
         return { name, img_url };
     };
 
-    const getSkillItem = async () => {};
+    const getSkillItem = async (path: string) => {
+        const url = await page.$eval(path, (el) => el.href);
+        await page.goto(url);
+        const name: string = await page.$eval(
+            '.post > div > div > div > div.custom_title',
+            (el) => {
+                return el.innerText;
+            }
+        );
+        const img_url: string = await page.$eval(
+            '.post > div > div > div > table.item_main_table > tbody > tr:nth-child(1) > td:nth-child(1) > div > img',
+            (el) => {
+                return el.src;
+            }
+        );
+        await page.goBack();
+        return { name, img_url };
+    };
 
     const materials = {
         gem: {
@@ -173,11 +190,19 @@ charactersRouter.get('/:char', async (req, res) => {
             green: await getItem('div:nth-child(7) > a'),
             blue: await getItem('div:nth-child(8) > a'),
         },
-        weekly: {},
+        weekly: await getSkillItem(
+            '#live_data > div:nth-child(14) > table > tbody > tr:nth-child(7) > td:nth-child(2) > div:nth-child(3) > a'
+        ),
         book: {
-            green: {},
-            blue: {},
-            pink: {},
+            green: await getSkillItem(
+                '#live_data > div:nth-child(14) > table > tbody > tr:nth-child(2) > td:nth-child(2) > div:nth-child(1) > a'
+            ),
+            blue: await getSkillItem(
+                '#live_data > div:nth-child(14) > table > tbody > tr:nth-child(3) > td:nth-child(2) > div:nth-child(1) > a'
+            ),
+            pink: await getSkillItem(
+                '#live_data > div:nth-child(14) > table > tbody > tr:nth-child(7) > td:nth-child(2) > div:nth-child(1) > a'
+            ),
         },
     };
     const background_urls = {

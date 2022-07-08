@@ -8,7 +8,7 @@ export interface CharacterDetails {
     element: 'anemo' | 'pyro' | 'cryo' | 'hydro' | 'geo' | 'dendro' | 'electro';
     rarity: number;
     constellation: string;
-    weapon_type: 'sword' | 'claymore' | 'bow' | 'catalyst' | 'polearm';
+    weapon_type: 'Sword' | 'Claymore' | 'Bow' | 'Catalyst' | 'Polearm';
     talents: {
         normal: {
             name: string;
