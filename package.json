@@ -9,7 +9,8 @@
     "scripts": {
         "build": "etsc",
         "start:dev": "nodemon",
-        "start": "node build/index.js"
+        "start": "node build/index.js",
+        "resuply": "etsc && node build/scrapper/index.js"
     },
     "dependencies": {
         "express": "^4.18.1",

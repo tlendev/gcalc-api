@@ -1,8 +1,3 @@
-export interface Character {
-    name: string;
-    card_url: string;
-}
-
 export interface CharacterDetails {
     name: string;
     element: 'anemo' | 'pyro' | 'cryo' | 'hydro' | 'geo' | 'dendro' | 'electro';
