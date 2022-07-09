@@ -32,3 +32,4 @@ Collection update must be triggered manually by running `yarn resuply` OR `npm r
 -   `build` - build the app
 -   `start` - start the app in production mode
 -   `start:dev` - start the app in watch mode
+-   `resuply` - regenerate the collection
