@@ -13,11 +13,14 @@
         "resuply": "etsc && node build/scrapper/index.js"
     },
     "dependencies": {
+        "cors": "^2.8.5",
         "express": "^4.18.1",
+        "helmet": "^5.1.0",
         "puppeteer": "^15.3.1",
         "uuid": "^8.3.2"
     },
     "devDependencies": {
+        "@types/cors": "^2.8.12",
         "@types/express": "^4.17.13",
         "@types/node": "^18.0.3",
         "@types/uuid": "^8.3.4",
