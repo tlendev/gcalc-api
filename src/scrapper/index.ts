@@ -30,11 +30,12 @@ const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
         )
     ) {
         console.log(`✅ Character ${name} exists, skipping...`);
-        return;
+        return false;
     }
     const page = await browser.newPage();
     await page.goto(url);
 
+    console.log('🔃 Getting basic info, this may take a while...');
     const element = await page.$eval(
         '#live_data > table:nth-child(1) > tbody > tr:nth-child(6) > td:nth-child(2) > img',
         (el) => {
@@ -57,7 +58,6 @@ const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
             return current;
         }
     );
-    console.log('🔃 10%');
 
     const rarity = await page.$eval(
         '#live_data > table:nth-child(1) > tbody > tr:nth-child(4) > td:nth-child(2)',
@@ -77,8 +77,8 @@ const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
             return el.innerText;
         }
     );
-    console.log('🔃 20%');
 
+    console.log('🔃 Getting talents, this may take a while...');
     const talents = {
         normal: {
             name: await page.$eval(
@@ -123,7 +123,6 @@ const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
             ),
         },
     };
-    console.log('🔃 30%');
 
     const getItem = async (path: string) => {
         let base = '';
@@ -155,6 +154,7 @@ const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
             }
         );
         await page.goBack();
+        console.log(`✅ Item ${name} success`);
         return { name, img_url };
     };
 
@@ -174,9 +174,11 @@ const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
             }
         );
         await page.goBack();
+        console.log(`✅ Item ${name} success`);
         return { name, img_url };
     };
 
+    console.log('🔃 Getting materials and skills, this will take a while...');
     const materials = {
         gem: {
             green: await getItem('div:nth-child(2) > a'),
@@ -206,8 +208,8 @@ const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
             ),
         },
     };
-    console.log('🔃 90%');
 
+    console.log('🔃 Getting backgrounds, this may take a while...');
     const background_urls = {
         card: await page.$eval(
             '#live_data > table:nth-child(1) > tbody > tr:nth-child(1) > td > div > img',
@@ -223,7 +225,6 @@ const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
             }
         ),
     };
-    console.log('🔃 100%');
 
     const details = {
         name,
@@ -241,6 +242,7 @@ const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
         JSON.stringify(details)
     );
     console.log(`✅ ${name} added to collection`);
+    return true;
 };
 
 /**
@@ -250,6 +252,7 @@ const regenerateCollection = async () => {
     const browser = await puppeteer.launch({
         headless: true,
         defaultViewport: { height: 99999, width: 1080 },
+        timeout: 3_000_000, // 300 seconds - 5 min
     });
     const page = await browser.newPage();
     await page.goto('https://genshin.honeyhunterworld.com/db/char/characters/');
@@ -275,14 +278,20 @@ const regenerateCollection = async () => {
     console.log('🔃 Collection out of date, rebuilding...');
 
     for (let i = 0, len = testChara.length; i < len; i++) {
-        await scrapeCharacter(testChara[i].name, testChara[i].url, browser);
-        await writeFile(
-            './collection/meta.json',
-            JSON.stringify({
-                count: count + 1,
-                names: [...names, testChara[i].name],
-            })
+        const write = await scrapeCharacter(
+            testChara[i].name,
+            testChara[i].url,
+            browser
         );
+        if (write) {
+            await writeFile(
+                './collection/meta.json',
+                JSON.stringify({
+                    count: count + 1,
+                    names: [...names, testChara[i].name],
+                })
+            );
+        }
     }
     console.log(`✅ Collection updated, ${count} -> ${testChara.length}`);
 };
