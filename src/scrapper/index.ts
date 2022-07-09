@@ -2,6 +2,7 @@ import puppeteer, { Browser } from 'puppeteer';
 import { writeFile, readFile, access } from 'fs/promises';
 import { CharacterDetails } from 'src/character/types/Character';
 import { PathLike } from 'fs';
+import { v4 as uuid } from 'uuid';
 
 interface Meta {
     count: number;
@@ -227,6 +228,7 @@ const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
     };
 
     const details = {
+        id: uuid(),
         name,
         element,
         rarity,
