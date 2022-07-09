@@ -1,4 +1,5 @@
 export interface CharacterDetails {
+    id: string;
     name: string;
     element: 'anemo' | 'pyro' | 'cryo' | 'hydro' | 'geo' | 'dendro' | 'electro';
     rarity: number;
