@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 8080;
 async function bootstrap() {
     const app = express();
 
-    app.use(helmet());
+    app.use(helmet({crossOriginResourcePolicy: false}));
     app.use(cors({ origin: process.env.ALLOW_URL }));
     app.use('/', appRouter);
     app.use('/characters', charactersRouter);
