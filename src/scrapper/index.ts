@@ -350,6 +350,7 @@ const regenerateCollection = async () => {
     console.log('🔃 Collection out of date, rebuilding...');
 
     for (let i = 0, len = testChara.length; i < len; i++) {
+        const current = await parseJson('./collection/meta.json');
         const write = await scrapeCharacter(
             testChara[i].name,
             testChara[i].url,
@@ -359,13 +360,14 @@ const regenerateCollection = async () => {
             await writeFile(
                 './collection/meta.json',
                 JSON.stringify({
-                    count: count + 1,
-                    names: [...names, testChara[i].name],
+                    count: current.count + 1,
+                    names: [...current.names, testChara[i].name],
                 })
             );
         }
     }
     console.log(`✅ Collection updated, ${count} -> ${testChara.length}`);
+    browser.close();
 };
 
 (async () => await regenerateCollection())();
