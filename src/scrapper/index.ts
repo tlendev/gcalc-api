@@ -1,4 +1,4 @@
-import puppeteer, { Browser } from 'puppeteer';
+import puppeteer, { Browser, Page } from 'puppeteer';
 import { writeFile, readFile, access } from 'fs/promises';
 import { CharacterDetails } from 'src/character/types/Character';
 import { PathLike } from 'fs';
@@ -24,6 +24,7 @@ const exists = async (path: PathLike) => {
 };
 
 const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
+    const imgs: Set<string> = new Set();
     console.log('🔃 Begin scrapping: ', name);
     if (
         await exists(
@@ -91,7 +92,10 @@ const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
             img_url: await page.$eval(
                 '#live_data > table:nth-child(7) > tbody > tr:nth-child(1) > td:nth-child(1) > div > img',
                 (el) => {
-                    return el.src;
+                    const url = el.src
+                        .replace('https://genshin.honeyhunterworld.com/', '')
+                        .replaceAll('/', '-');
+                    return url;
                 }
             ),
         },
@@ -105,7 +109,10 @@ const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
             img_url: await page.$eval(
                 '#live_data > table:nth-child(9) > tbody > tr:nth-child(1) > td:nth-child(1) > div > img',
                 (el) => {
-                    return el.src;
+                    const url = el.src
+                        .replace('https://genshin.honeyhunterworld.com/', '')
+                        .replaceAll('/', '-');
+                    return url;
                 }
             ),
         },
@@ -119,11 +126,18 @@ const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
             img_url: await page.$eval(
                 '#live_data > table:nth-child(11) > tbody > tr:nth-child(1) > td:nth-child(1) > div > img',
                 (el) => {
-                    return el.src;
+                    const url = el.src
+                        .replace('https://genshin.honeyhunterworld.com/', '')
+                        .replaceAll('/', '-');
+                    return url;
                 }
             ),
         },
     };
+
+    imgs.add(talents.normal.img_url);
+    imgs.add(talents.skill.img_url);
+    imgs.add(talents.burst.img_url);
 
     const getItem = async (path: string) => {
         let base = '';
@@ -151,9 +165,13 @@ const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
         const img_url: string = await page.$eval(
             '.post > div > div > div > table.item_main_table > tbody > tr:nth-child(1) > td:nth-child(1) > div > img',
             (el) => {
-                return el.src;
+                const url = el.src
+                    .replace('https://genshin.honeyhunterworld.com/', '')
+                    .replaceAll('/', '-');
+                return url;
             }
         );
+        imgs.add(img_url);
         await page.goBack();
         console.log(`✅ Item ${name} success`);
         return { name, img_url };
@@ -171,9 +189,13 @@ const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
         const img_url: string = await page.$eval(
             '.post > div > div > div > table.item_main_table > tbody > tr:nth-child(1) > td:nth-child(1) > div > img',
             (el) => {
-                return el.src;
+                const url = el.src
+                    .replace('https://genshin.honeyhunterworld.com/', '')
+                    .replaceAll('/', '-');
+                return url;
             }
         );
+        imgs.add(img_url);
         await page.goBack();
         console.log(`✅ Item ${name} success`);
         return { name, img_url };
@@ -215,17 +237,25 @@ const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
         card: await page.$eval(
             '#live_data > table:nth-child(1) > tbody > tr:nth-child(1) > td > div > img',
             (el) => {
-                return el.src;
+                const url = el.src
+                    .replace('https://genshin.honeyhunterworld.com/', '')
+                    .replaceAll('/', '-');
+                return url;
             }
         ),
         gatcha: await page.$eval(
             '.post > div > div > div > div:nth-child(18) > div > div:nth-child(4) > a > img',
             (el) => {
-                const pre: string = el.src;
-                return pre.replace('_70', '');
+                const url = el.src
+                    .replace('https://genshin.honeyhunterworld.com/', '')
+                    .replace('_70', '')
+                    .replaceAll('/', '-');
+                return url;
             }
         ),
     };
+    imgs.add(background_urls.card);
+    imgs.add(background_urls.gatcha);
 
     const details = {
         id: uuid(),
@@ -243,6 +273,46 @@ const scrapeCharacter = async (name: string, url: string, browser: Browser) => {
         `./collection/${name.replaceAll(' ', '-').toLowerCase()}.json`,
         JSON.stringify(details)
     );
+
+    const saveImg = async (path: string, page: Page) => {
+        const url =
+            'https://genshin.honeyhunterworld.com/' + path.replaceAll('-', '/');
+        if (
+            await exists(
+                `./collection/media/${path
+                    .replaceAll('/', '-')
+                    .replace('.png', '')}.webp`
+            )
+        ) {
+            console.log(
+                `✅ Img ${path.replaceAll(
+                    '/',
+                    '-'
+                )} already exists, skipping...`
+            );
+            return;
+        }
+        const view = await page.goto(url);
+        if (!view) {
+            throw new Error(`URL for ${url} is invalid or was moved`);
+        }
+        await writeFile(
+            `./collection/media/${path
+                .replaceAll('/', '-')
+                .replace('.png', '')}.webp`,
+            await view.buffer(),
+            'base64'
+        );
+        console.log(`✅ Img ${path.replaceAll('/', '-')} saved`);
+    };
+
+    console.log('🔃 Saving images, this may take a while...');
+
+    const urls = [...imgs];
+    for (let i = 0; i < urls.length; i++) {
+        console.log(`🔃 Saving ${i + 1} / ${urls.length}`);
+        await saveImg(urls[i], page);
+    }
     console.log(`✅ ${name} added to collection`);
     return true;
 };
