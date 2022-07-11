@@ -7,6 +7,7 @@ import { appRouter } from './app';
 import { charactersRouter } from './character/index';
 import helmet from 'helmet';
 import cors from 'cors';
+import { imgRouter } from './img';
 
 const PORT = process.env.PORT || 8080;
 
@@ -17,6 +18,7 @@ async function bootstrap() {
     app.use(cors({ origin: process.env.ALLOW_URL }));
     app.use('/', appRouter);
     app.use('/characters', charactersRouter);
+    app.use('/img', imgRouter);
 
     app.listen(PORT, () => console.log(`server started on port ${PORT}`));
 }
